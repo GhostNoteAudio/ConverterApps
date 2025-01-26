@@ -54,7 +54,7 @@
                 margin: 0 auto;
                 padding: 20px;
                 border-radius: 20px;
-                margin-top: 20px;
+                margin-top: 0px;
                 transform-origin: 50% 0%;
             }
 
@@ -146,7 +146,7 @@
                 updateModel();
 
                 if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-                    let scaleValue = ($(document).width() - 50) / 500.0;
+                    let scaleValue = ($(document).width()) / 500.0;
                     $('#master-div').css("scale", scaleValue);
                 }
 
