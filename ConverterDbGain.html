@@ -1,0 +1,484 @@
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
+        <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
+        
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+        
+        <style>
+            body {
+                font-family: "Open Sans";
+            }
+            h2 {
+                font-size: 18pt;
+                margin-top: 25px;
+                margin-bottom: 15px;
+            }
+
+            h2 i {
+                font-size: 14pt;
+                position:relative;
+                top: -2px;
+            }
+
+            p {
+                color: #666;
+            }
+            input[type=text] {
+                padding: 2px;
+                margin: 2px;
+            }
+
+            input[type=button] {
+                padding:3px;
+            }
+            #sysex-textarea, #monitor-textarea {
+                width: 100%; 
+                height: 140px;
+                margin-bottom: 5px;
+                padding: 5px;
+                font-family: "JetBrains Mono";
+                font-size: 10pt;
+            }
+
+            #master-div {
+                width: 500px;
+                background: #eee;
+                margin: 0 auto;
+                padding: 20px;
+                border-radius: 20px;
+                margin-top: 20px;
+                transform-origin: 50% 0%;
+            }
+
+            label {
+                display: block;
+                width: 100%;
+            }
+
+            .x3-input {padding: 5px 2px; }
+            .x3-input h3 { display:inline-block; width: 20%; margin:0; font-size: 12pt; }
+            .x3-input p { display:inline-block; width: 18%; margin:0; font-size: 8pt; }
+
+            .x3-input select, .x3-input input { width: calc(25%); margin: 2px 5px; }
+
+            .tooltip > .tooltip-inner {
+                background-color: rgb(42, 45, 53);
+            }
+
+            .mode-tooltip > .tooltip-inner {
+                text-align: left;
+                max-width: 550px;
+            }
+
+            table {
+                width: 100%;
+            }
+            th, td {
+                padding: 2px 5px;
+                border: 1px solid rgba(0, 0, 0, 0.2);
+            }
+
+        </style>
+
+        <script type="text/javascript">
+
+            let model = {
+                GainAmplitude: 1.0,
+                DbAmplitude: 0.0,
+                GainPower: 1.0,
+                DbPower: 0.0
+            };
+
+            function setValues(newValue, source) {
+                if (source === "gain-amplitude") model.GainAmplitude = newValue;
+                else if (source === "db-amplitude") model.GainAmplitude = Math.pow(10, newValue / 20);
+                else if (source === "gain-power") model.GainPower = newValue;
+                else if (source === "db-power") model.GainPower = Math.pow(10, newValue / 10);
+
+                model.DbAmplitude = 20 * Math.log10(model.GainAmplitude);
+                model.DbPower = 10 * Math.log10(model.GainPower);
+            }
+
+            function updateModel(ev) {
+                let source = (!ev) ? "gain-amplitude" : ev.target.id;
+                let valueText = $("#"+source).val();
+                console.log("Updating " + source + " as " + valueText);
+
+                let valueFloat = parseFloat(valueText);
+                
+                // validate
+                if (isNaN(valueFloat)) return;
+                if (source === "db-amplitude" || source === "db-power")
+                {
+                    if (!(valueFloat >= -10000 && valueFloat < 10000)) return;
+                }
+                else
+                {
+                    if (!(valueFloat >= 0)) return;
+                }
+                
+                setValues(valueFloat, source);
+                updateUi(source);
+            }
+
+            function updateUi(sourceId) {
+                // don't update the sourceId!
+
+                if (sourceId != 'gain-amplitude') $('#gain-amplitude').val(Number(model.GainAmplitude.toFixed(3)));
+                if (sourceId != 'db-amplitude') $('#db-amplitude').val(Number(model.DbAmplitude.toFixed(3)));
+                if (sourceId != 'gain-power') $('#gain-power').val(Number(model.GainPower.toFixed(3)));
+                if (sourceId != 'db-power') $('#db-power').val(Number(model.DbPower.toFixed(3)));
+            }
+
+            // ----------------- Button Handlers ---------------
+
+            $(window).on('load', () => {
+                $(':input[type="text"]').change(updateModel);
+                $(':input[type="text"]').on('input', updateModel);
+                updateModel();
+
+                if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                    let scaleValue = ($(document).width() - 50) / 500.0;
+                    $('#master-div').css("scale", scaleValue);
+                }
+
+                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+            });
+        </script>
+    </head>
+    <body>
+        <div id="master-div">
+            <svg
+                style="width: 60%; opacity: 0.7;"
+                width="135mm"
+                height="22mm"
+                viewBox="0 0 135 33"
+                version="1.1"
+                id="svg1005"
+                inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+                sodipodi:docname="logo.svg"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+                xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:svg="http://www.w3.org/2000/svg">
+                <sodipodi:namedview
+                    id="namedview1007"
+                    pagecolor="#ffffff"
+                    bordercolor="#666666"
+                    borderopacity="1.0"
+                    inkscape:pageshadow="2"
+                    inkscape:pageopacity="0.0"
+                    inkscape:pagecheckerboard="0"
+                    inkscape:document-units="mm"
+                    showgrid="false"
+                    inkscape:zoom="1.8116734"
+                    inkscape:cx="310.76241"
+                    inkscape:cy="261.91254"
+                    inkscape:window-width="2560"
+                    inkscape:window-height="1537"
+                    inkscape:window-x="-8"
+                    inkscape:window-y="-8"
+                    inkscape:window-maximized="1"
+                    inkscape:current-layer="layer1" />
+                <defs
+                    id="defs1002" />
+                <g
+                    inkscape:label="Layer 1"
+                    inkscape:groupmode="layer"
+                    id="layer1">
+                    <g
+                    id="g1245"
+                    transform="translate(-0.31343726,-0.49619785)">
+                    <g
+                        id="Layer2"
+                        transform="matrix(0.26458333,0,0,0.26458333,-84.797618,-99.808535)"
+                        style="clip-rule:evenodd;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2">
+                        <g
+                        transform="translate(45.9056,13)"
+                        id="g22">
+                        <g
+                            transform="matrix(50,0,0,50,340.961,425.835)"
+                            id="g4">
+                            <path
+                            d="m 0.063,-0.359 c 0,0.226 0.133,0.371 0.346,0.371 0.087,0 0.171,-0.024 0.231,-0.065 V -0.35 H 0.382 v 0.033 h 0.221 v 0.244 c -0.045,0.03 -0.116,0.05 -0.194,0.05 -0.19,0 -0.306,-0.131 -0.306,-0.336 0,-0.19 0.124,-0.318 0.306,-0.318 0.073,0 0.144,0.018 0.198,0.052 l 0.02,-0.031 C 0.566,-0.693 0.489,-0.712 0.409,-0.712 c -0.206,0 -0.346,0.142 -0.346,0.353 z"
+                            style="fill-rule:nonzero"
+                            id="path2" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,392.111,425.835)"
+                            id="g8">
+                            <path
+                            d="m 0.093,0 h 0.039 v -0.339 h 0.43 V 0 H 0.601 V -0.7 H 0.562 v 0.326 H 0.132 V -0.7 H 0.093 Z"
+                            style="fill-rule:nonzero"
+                            id="path6" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,441.811,425.835)"
+                            id="g12">
+                            <path
+                            d="m 0.063,-0.356 c 0,0.229 0.149,0.368 0.34,0.368 0.192,0 0.341,-0.139 0.341,-0.368 0,-0.216 -0.153,-0.356 -0.341,-0.356 -0.187,0 -0.34,0.14 -0.34,0.356 z m 0.04,0 c 0,-0.194 0.136,-0.321 0.3,-0.321 0.165,0 0.301,0.127 0.301,0.321 0,0.208 -0.132,0.333 -0.301,0.333 -0.168,0 -0.3,-0.125 -0.3,-0.333 z"
+                            style="fill-rule:nonzero"
+                            id="path10" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,496.211,425.835)"
+                            id="g16">
+                            <path
+                            d="m 0.059,-0.056 c 0.051,0.035 0.142,0.068 0.244,0.068 0.163,0 0.239,-0.08 0.239,-0.185 0,-0.277 -0.431,-0.123 -0.431,-0.358 0,-0.084 0.07,-0.146 0.188,-0.146 0.084,0 0.151,0.023 0.198,0.047 l 0.017,-0.033 c -0.05,-0.026 -0.122,-0.049 -0.216,-0.049 -0.143,0 -0.227,0.079 -0.227,0.181 0,0.273 0.431,0.125 0.431,0.358 0,0.085 -0.063,0.15 -0.199,0.15 -0.093,0 -0.176,-0.032 -0.223,-0.065 z"
+                            style="fill-rule:nonzero"
+                            id="path14" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,540.911,425.835)"
+                            id="g20">
+                            <path
+                            d="M 0.3,0 H 0.339 V -0.664 H 0.608 V -0.7 H 0.032 v 0.036 H 0.3 Z"
+                            style="fill-rule:nonzero"
+                            id="path18" />
+                        </g>
+                        </g>
+                        <g
+                        transform="translate(311.3,13)"
+                        id="g40">
+                        <g
+                            transform="matrix(50,0,0,50,340.961,425.835)"
+                            id="g26">
+                            <path
+                            d="M 0.093,0 H 0.131 V -0.649 L 0.572,0 H 0.621 V -0.7 H 0.582 v 0.65 L 0.141,-0.7 H 0.093 Z"
+                            style="fill-rule:nonzero"
+                            id="path24" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,391.661,425.835)"
+                            id="g30">
+                            <path
+                            d="m 0.063,-0.356 c 0,0.229 0.149,0.368 0.34,0.368 0.192,0 0.341,-0.139 0.341,-0.368 0,-0.216 -0.153,-0.356 -0.341,-0.356 -0.187,0 -0.34,0.14 -0.34,0.356 z m 0.04,0 c 0,-0.194 0.136,-0.321 0.3,-0.321 0.165,0 0.301,0.127 0.301,0.321 0,0.208 -0.132,0.333 -0.301,0.333 -0.168,0 -0.3,-0.125 -0.3,-0.333 z"
+                            style="fill-rule:nonzero"
+                            id="path28" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,444.311,425.835)"
+                            id="g34">
+                            <path
+                            d="M 0.3,0 H 0.339 V -0.664 H 0.608 V -0.7 H 0.032 v 0.036 H 0.3 Z"
+                            style="fill-rule:nonzero"
+                            id="path32" />
+                        </g>
+                        <g
+                            transform="matrix(50,0,0,50,491.311,425.835)"
+                            id="g38">
+                            <path
+                            d="M 0.093,0 H 0.56 V -0.035 H 0.132 V -0.34 h 0.38 V -0.374 H 0.132 V -0.665 H 0.553 V -0.7 h -0.46 z"
+                            style="fill-rule:nonzero"
+                            id="path36" />
+                        </g>
+                        </g>
+                        <g
+                        transform="translate(-143.088,-77.0207)"
+                        id="g62">
+                        <g
+                            transform="matrix(37.5,0,0,37.5,531.655,579.153)"
+                            id="g44">
+                            <path
+                            d="M 0.04,0 0.315,-0.7 H 0.349 L 0.623,0 H 0.595 L 0.515,-0.208 H 0.148 L 0.068,0 Z M 0.331,-0.683 0.156,-0.23 H 0.507 L 0.333,-0.683 Z"
+                            style="fill-rule:nonzero"
+                            id="path42" />
+                        </g>
+                        <g
+                            transform="matrix(37.5,0,0,37.5,566.755,579.153)"
+                            id="g48">
+                            <path
+                            d="M 0.093,-0.252 V -0.7 h 0.024 v 0.448 c 0,0.076 0.023,0.135 0.068,0.178 0.045,0.043 0.101,0.064 0.169,0.064 0.068,0 0.124,-0.021 0.17,-0.064 0.045,-0.043 0.067,-0.102 0.067,-0.178 V -0.7 h 0.024 v 0.448 c 0,0.084 -0.025,0.149 -0.074,0.195 C 0.492,-0.011 0.429,0.012 0.354,0.012 0.279,0.012 0.216,-0.011 0.167,-0.057 0.118,-0.103 0.093,-0.168 0.093,-0.252 Z"
+                            style="fill-rule:nonzero"
+                            id="path46" />
+                        </g>
+                        <g
+                            transform="matrix(37.5,0,0,37.5,604.555,579.153)"
+                            id="g52">
+                            <path
+                            d="m 0.096,0 v -0.7 h 0.178 c 0.117,0 0.207,0.03 0.269,0.09 0.062,0.06 0.093,0.143 0.093,0.25 0,0.115 -0.03,0.203 -0.091,0.266 C 0.484,-0.031 0.394,0 0.274,0 Z M 0.12,-0.022 h 0.154 c 0.112,0 0.196,-0.029 0.253,-0.089 C 0.584,-0.17 0.612,-0.253 0.612,-0.36 0.612,-0.459 0.583,-0.537 0.525,-0.594 0.467,-0.65 0.383,-0.678 0.274,-0.678 H 0.12 Z"
+                            style="fill-rule:nonzero"
+                            id="path50" />
+                        </g>
+                        <g
+                            transform="matrix(37.5,0,0,37.5,642.13,579.153)"
+                            id="g56">
+                            <rect
+                            x="0.096000001"
+                            y="-0.69999999"
+                            width="0.024"
+                            height="0.69999999"
+                            style="fill-rule:nonzero"
+                            id="rect54" />
+                        </g>
+                        <g
+                            transform="matrix(37.5,0,0,37.5,661.48,579.153)"
+                            id="g60">
+                            <path
+                            d="m 0.066,-0.356 c 0,-0.105 0.033,-0.191 0.098,-0.257 0.065,-0.066 0.144,-0.099 0.239,-0.099 0.095,0 0.175,0.033 0.24,0.099 0.065,0.066 0.097,0.152 0.097,0.257 0,0.112 -0.032,0.201 -0.095,0.268 -0.064,0.067 -0.145,0.1 -0.242,0.1 -0.097,0 -0.178,-0.033 -0.241,-0.1 C 0.098,-0.155 0.066,-0.244 0.066,-0.356 Z m 0.024,0 c 0,0.105 0.03,0.189 0.089,0.252 0.059,0.063 0.134,0.094 0.224,0.094 0.09,0 0.165,-0.031 0.224,-0.094 0.059,-0.063 0.089,-0.147 0.089,-0.252 0,-0.099 -0.03,-0.179 -0.091,-0.241 C 0.564,-0.659 0.49,-0.69 0.403,-0.69 0.316,-0.69 0.242,-0.659 0.181,-0.597 0.12,-0.535 0.09,-0.455 0.09,-0.356 Z"
+                            style="fill-rule:nonzero"
+                            id="path58" />
+                        </g>
+                        </g>
+                    </g>
+                    <g
+                        id="path2986-1"
+                        transform="matrix(0.1102741,0,0,0.1102741,-35.262036,-41.191051)"
+                        style="clip-rule:evenodd;fill-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2">
+                        <path
+                        d="m 414.37,453.28 c -0.271,22.337 -37.865,44.111 -36.624,83.655 0.784,24.977 27.218,57.436 46.03,80.952 -9.406,-4.703 -18.817,-9.012 -32.921,-9.406 -28.303,-0.79 -43.029,18.259 -37.624,37.624 4.178,14.969 8.23,19.646 14.109,28.218 -30.171,-16.426 -47.184,-37.825 -44.443,-56.436 4.24,-28.795 30.891,-42.095 53.05,-39.976 -23.515,-23.515 -40.894,-47.468 -41.058,-70.31 -0.18,-25.172 25.103,-53.707 30.451,-67.429 2.527,-6.483 2.193,-12.322 2,-15.109 -1.341,-19.352 -9.406,-32.921 -14.109,-47.03 18.812,23.515 61.139,57.612 61.139,74.306 z"
+                        id="path130" />
+                    </g>
+                    </g>
+                </g>
+            </svg>
+
+            <div>
+                <h2>Decibel to Gain Conversion</h2>
+
+                <b style="display:inline-block; margin-top: 5px; margin-bottom: 5px" data-bs-toggle="tooltip" data-bs-custom-class="mode-tooltip" data-bs-placement="right" data-bs-html="true" data-bs-title="Amplitude gain - used for signal amplification where power and current is not a factor. Examples include dBFS, dBU, dBV and Sound Pressure Level">Amplitude Ratio (e.g. audio signals)</b>
+
+                <div class="x3-input">
+                    <h3>Gain Ratio</h3>
+                    <input id="gain-amplitude" type="text" inputmode="decimal" min="0" max="1000000" value="1"></input>x
+                </div>
+                
+                <div class="x3-input">
+                    <h3>Gain dB</h3>
+                    <input id="db-amplitude" type="text" inputmode="decimal" min="-1000" max="1000" value="0"></input>dB
+                </div>    
+
+                <b style="display:inline-block; margin-top: 15px;" data-bs-toggle="tooltip" data-bs-custom-class="mode-tooltip" data-bs-placement="right" data-bs-html="true" data-bs-title="Power gain - used for scenarios where we measure power, such as amplifier output and sound intensity level.">Power Ratio</b>
+
+                <div class="x3-input">
+                    <h3>Gain Ratio</h3>
+                    <input id="gain-power" type="text" inputmode="decimal" min="0" max="1000000" value="1"></input>x
+                </div>
+                
+                <div class="x3-input">
+                    <h3>Gain dB</h3>
+                    <input id="db-power" type="text" inputmode="decimal" min="-1000" max="1000" value="0"></input>dB
+                </div>  
+
+                <h2 data-bs-toggle="collapse" href="#collapseEquations" role="button" aria-expanded="false" aria-controls="collapseEquations">
+                    <i class="bi bi-caret-down-fill"></i>
+                    Equations
+                </h2>
+
+                <div class="collapse" id="collapseEquations">
+                    <!-- 
+                    dB_{Power} = 10 \cdot log_{10}\left ( \frac{V_2}{V_1} \right ) 
+                    Gain_{Amplitude} = 10^{dB/20}
+                    -->
+                    <img alt="" style="height:40pt; margin-bottom: 20pt;" src="data:image/png;base64,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" />
+                    <img alt="" style="height:24pt; margin-bottom: 20pt;" src="data:image/png;base64,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" />
+                    <img alt="" style="height:40pt; margin-bottom: 20pt;" src="data:image/png;base64,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" />
+                    <img alt="" style="height:24pt; margin-bottom: 20pt;" src="data:image/png;base64,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" />
+                </div>
+                
+                <h2 data-bs-toggle="collapse" href="#collapseValueTable" role="button" aria-expanded="false" aria-controls="collapseValueTable">
+                    <i class="bi bi-caret-down-fill"></i>
+                    Value Table
+                </h2>
+
+                <div class="collapse" id="collapseValueTable">
+                    <table>
+                        <tr>
+                            <th colspan="2">Amplitude</th>
+                            <th colspan="2">Power</th>
+                        </tr>
+                        <tr>
+                            <th>Ratio</th>
+                            <th>dB</th>
+                            <th>Ratio</th>
+                            <th>dB</th>
+                        </tr>
+                        <tr>
+                            <td>0.1</td>
+                            <td>-20</td>
+                            <td>0.1</td>
+                            <td>-10</td>
+                        </tr>
+                        <tr>
+                            <td>0.5</td>
+                            <td>-6.021</td>
+                            <td>0.5</td>
+                            <td>-3.01</td>
+                        </tr>
+                        <tr>
+                            <td>0.708</td>
+                            <td>-3</td>
+                            <td>0.708</td>
+                            <td>-1.5</td>
+                        </tr>
+                        <tr style="font-weight: bold;">
+                            <td>1</td>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>0</td>
+                        </tr>
+                        <tr>
+                            <td>1.413</td>
+                            <td>3</td>
+                            <td>1.413</td>
+                            <td>1.5</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>6.021</td>
+                            <td>2</td>
+                            <td>3.01</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>9.542</td>
+                            <td>3</td>
+                            <td>4.771</td>
+                        </tr>
+                        <tr>
+                            <td>3.162</td>
+                            <td>10</td>
+                            <td>3.162</td>
+                            <td>5</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>20</td>
+                            <td>10</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <td>100</td>
+                            <td>40</td>
+                            <td>100</td>
+                            <td>20</td>
+                        </tr>
+                        <tr>
+                            <td>1000</td>
+                            <td>60</td>
+                            <td>1000</td>
+                            <td>30</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h2>Useful Resources</h2>
+                <ul>
+                <li><a href="https://en.wikipedia.org/wiki/Decibel#Voltage">Wikipedia - Decibel</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Sound_pressure#Sound_pressure_level">Wikipedia - Sound Pressure</a></li>
+                <li><a href="https://en.wikipedia.org/wiki/Sound_intensity#Sound_intensity_level">Wikipedia - Sound Intensity</a></li>
+                </ul>
+            </div>
+        </div>
+    </body>
+
+    
+</html>
