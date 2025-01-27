@@ -38,14 +38,6 @@
             input[type=button] {
                 padding:3px;
             }
-            #sysex-textarea, #monitor-textarea {
-                width: 100%; 
-                height: 140px;
-                margin-bottom: 5px;
-                padding: 5px;
-                font-family: "JetBrains Mono";
-                font-size: 10pt;
-            }
 
             #master-div {
                 max-width: 500px;
@@ -141,10 +133,10 @@
                 $(':input[type="text"]').on('input', updateModel);
                 updateModel();
 
-                if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                /*if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
                     let scaleValue = ($(window).width()) / 500.0;
                     $('#master-div').css("scale", scaleValue);
-                }
+                }*/
 
                 const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                 const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
