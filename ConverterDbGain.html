@@ -146,7 +146,7 @@
                 updateModel();
 
                 if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-                    let scaleValue = ($(document).width()) / 500.0;
+                    let scaleValue = ($(window).width()) / 500.0;
                     $('#master-div').css("scale", scaleValue);
                 }
 
