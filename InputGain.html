@@ -30,8 +30,13 @@
             p {
                 color: #666;
             }
-            input[type=text], select {
+            select {
                 padding: 2px;
+                margin: 2px;
+            }
+
+            input[type=text] {
+                padding: 1px;
                 margin: 2px;
             }
 
@@ -83,6 +88,7 @@
         <script type="text/javascript">
 
             let interfaceData = [
+                ["-- Reference Signal --", 0, ""],
                 ["Antelope Audio Discrete 4/8 Pro", 18, ""],    
                 ["Antelope Audio Orion Studio Synergy Core", 18, ""],
                 ["Antelope Audio Zen Quadro", 20, ""],
@@ -172,6 +178,9 @@
                 InterfaceMaxLevel: 8.0,
                 SoftwareLevel: 8.0,
                 Adjustment: 0.0,
+                ReferenceMode: false,
+                ReferenceSignalLevel: 4.0,
+                ReferenceDbfs: -10,
             };
 
             function updateModel(ev) {
@@ -197,6 +206,22 @@
                     if (!isNaN(newValue))
                         model.SoftwareLevel = newValue;
                 }
+                else if (source == "reference-signal") {
+                    let newValue = Number($("#"+source).val());
+                    if (!isNaN(newValue))
+                        model.ReferenceSignalLevel = newValue;
+                }
+                else if (source == "reference-dbfs" && model.ReferenceMode) {
+                    let newValue = Number($("#"+source).val());
+                    if (!isNaN(newValue))
+                        model.ReferenceDbfs = newValue;
+                }
+
+                model.ReferenceMode = model.InterfaceName == "-- Reference Signal --";
+                if (model.ReferenceMode) {
+                    model.InterfaceMaxLevel = -model.ReferenceDbfs + model.ReferenceSignalLevel;
+                    $("#interface-dbu").val(Number(model.InterfaceMaxLevel.toFixed(2)));
+                }
 
                 model.Adjustment = model.InterfaceMaxLevel - model.SoftwareLevel;
                 let adjustString = "";
@@ -211,6 +236,19 @@
                 if (interfaceNote) $('#notes').append(`<li>Interface: ${interfaceNote}</li>`);
                 if (softwareNote) $('#notes').append(`<li>Software: ${softwareNote}</li>`);
 
+                
+                $("#reference-signal").prop('disabled', !model.ReferenceMode);
+                $("#reference-dbfs").prop('disabled', !model.ReferenceMode);
+                $("#interface-dbu").prop('disabled', model.ReferenceMode);
+
+                updateReferenceValues();
+
+            }
+
+            function updateReferenceValues() {
+                if (model.ReferenceMode) return;
+                model.ReferenceDbfs = model.ReferenceSignalLevel - model.InterfaceMaxLevel ;
+                $("#reference-dbfs").val(Number(model.ReferenceDbfs.toFixed(2)));
             }
 
             function populateDropdowns() {
@@ -259,6 +297,16 @@
                     <h3>Interface</h3>
                     <select id="interface">
                     </select>
+                </div>
+
+                <div class="x3-input">
+                    <select id="reference-signal" style="width: 30%;">
+                        <option value="-7.782">-10dBV</option>
+                        <option value="-0.792">1V Peak</option>
+                        <option value="0">0dBu</option>
+                        <option value="4" selected="selected">+4dBu</option>
+                    </select>🠊
+                    <input id="reference-dbfs" type="text" inputmode="decimal" min="-50" max="0" value="-10"></input>dbFS
                 </div>
 
                 <div class="x3-input">
