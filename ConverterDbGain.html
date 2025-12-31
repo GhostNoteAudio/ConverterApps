@@ -123,10 +123,10 @@
             function updateUi(sourceId) {
                 // don't update the sourceId!
 
-                if (sourceId != 'gain-amplitude') $('#gain-amplitude').val(Number(model.GainAmplitude.toFixed(3)));
-                if (sourceId != 'db-amplitude') $('#db-amplitude').val(Number(model.DbAmplitude.toFixed(3)));
-                if (sourceId != 'gain-power') $('#gain-power').val(Number(model.GainPower.toFixed(3)));
-                if (sourceId != 'db-power') $('#db-power').val(Number(model.DbPower.toFixed(3)));
+                if (sourceId != 'gain-amplitude') $('#gain-amplitude').val(Number(model.GainAmplitude.toFixed(4)));
+                if (sourceId != 'db-amplitude') $('#db-amplitude').val(Number(model.DbAmplitude.toFixed(4)));
+                if (sourceId != 'gain-power') $('#gain-power').val(Number(model.GainPower.toFixed(4)));
+                if (sourceId != 'db-power') $('#db-power').val(Number(model.DbPower.toFixed(4)));
             }
 
             // ----------------- Button Handlers ---------------

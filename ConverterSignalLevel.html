@@ -119,11 +119,11 @@
             function updateUi(sourceId) {
                 // don't update the sourceId!
 
-                if (sourceId != 'v-peak') $('#v-peak').val(Number(model.VPeak.toFixed(3)));
-                if (sourceId != 'v-p2p') $('#v-p2p').val(Number(model.VP2P.toFixed(3)));
-                if (sourceId != 'v-rms') $('#v-rms').val(Number(model.VRms.toFixed(3)));
-                if (sourceId != 'dbu') $('#dbu').val(Number(model.Dbu.toFixed(3)));
-                if (sourceId != 'dbv') $('#dbv').val(Number(model.Dbv.toFixed(3)));
+                if (sourceId != 'v-peak') $('#v-peak').val(Number(model.VPeak.toFixed(4)));
+                if (sourceId != 'v-p2p') $('#v-p2p').val(Number(model.VP2P.toFixed(4)));
+                if (sourceId != 'v-rms') $('#v-rms').val(Number(model.VRms.toFixed(4)));
+                if (sourceId != 'dbu') $('#dbu').val(Number(model.Dbu.toFixed(4)));
+                if (sourceId != 'dbv') $('#dbv').val(Number(model.Dbv.toFixed(4)));
             }
 
             // ----------------- Button Handlers ---------------
@@ -173,7 +173,7 @@
                 <div class="x3-input">
                     <h3 data-bs-toggle="tooltip" data-bs-custom-class="mode-tooltip" data-bs-placement="right" data-bs-html="true" data-bs-title="Relative to 1 volt RMS, regardless of impedance.">dB<sub>V</sub></h3>
                     <input id="dbv" type="text" inputmode="decimal" min="-1000" max="1000" value="0"></input>dBV
-                </div>    
+                </div>
 
                 <h2>Useful Resources</h2>
                 <ul>
